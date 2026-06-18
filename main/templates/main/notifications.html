@@ -1,0 +1,76 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="vh-container">
+
+<h1 class="text-2xl font-bold mb-4">Уведомления</h1>
+
+<div style="display: flex; gap: 12px; margin-bottom: 25px;">
+    <form action="{% url 'clear_notifications' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить все уведомления</button>
+    </form>
+
+ {% if all_read %}
+    <div style="padding: 8px 12px; color: #777; font-weight: 500;">
+        Все уведомления прочитаны
+    </div>
+{% else %}
+    <form action="{% url 'mark_all_read' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary">Отметить как прочитанные</button>
+    </form>
+{% endif %}
+
+</div>
+
+<style>
+.notif {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: #fffaf0;
+    border-left: 4px solid #ffcc66;
+}
+
+.notif.unread {
+    background: #fff4e6;
+    border-left: 4px solid #ff9800;
+    font-weight: bold;
+}
+
+.notif.read {
+    background: #ffffff;
+    border-left: 4px solid #ddd;
+}
+
+.notif a {
+    display: block;
+    color: #000;
+    text-decoration: underline;
+    margin-top: 6px;
+    font-weight: 500;
+}
+</style>
+
+{% if notifications %}
+    {% for n in notifications %}
+        <div class="notif {% if not n.is_read %}unread{% else %}read{% endif %}">
+           {{ n.text|safe }}
+
+{% if n.link %}
+    <br><a href="{{ n.link }}">Перейти</a>
+{% endif %}
+
+<br><small style="color: #777;">{{ n.created_at|date:"d.m.Y H:i" }}</small>
+
+
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="vh-empty">У вас пока нет уведомлений</p>
+{% endif %}
+
+</div>
+{% endblock %}

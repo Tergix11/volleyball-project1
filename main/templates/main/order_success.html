@@ -1,0 +1,27 @@
+{% extends 'main/base.html' %}
+{% block content %}
+
+<div class="vh-container-1470 flex justify-center mt-16">
+
+    <div class="vh-success-card">
+
+        <h1 class="vh-success-title">Заказ успешно оформлен!</h1>
+
+        <p class="vh-success-text">
+            Спасибо, что выбрали Volleyball Hub.  
+            Ваш заказ принят и скоро будет обработан.
+        </p>
+
+        <a href="{% url 'my_orders' %}" class="vh-success-btn">
+            Перейти к моим заказам
+        </a>
+
+        <a href="{% url 'shop' %}" class="vh-success-link">
+            Вернуться в магазин
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

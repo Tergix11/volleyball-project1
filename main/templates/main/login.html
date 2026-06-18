@@ -1,0 +1,40 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="auth-container">
+
+    <div class="auth-box">
+        <h2 class="auth-title">Вход в аккаунт</h2>
+
+        <form method="POST">
+    {% csrf_token %}
+
+    <div class="auth-field">
+        <label>Имя пользователя</label>
+        <input type="text" name="username" required>
+    </div>
+
+    <div class="auth-field">
+        <label>Пароль</label>
+        <input type="password" name="password" required>
+    </div>
+
+    <button class="auth-btn" type="submit">Войти</button>
+
+    {% if form.errors %}
+        <p style="color:red; margin-top:10px;">Неверный логин или пароль</p>
+    {% endif %}
+
+    <p class="auth-switch">
+        Нет аккаунта?
+        <a href="{% url 'register' %}">Создать</a>
+    </p>
+</form>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Модалка для сообщений Django -->
+<div id="vh-modal" class="vh-modal hidden">
+    <div class="vh-modal-box">
+        <p id="vh-modal-text"></p>
+        <button onclick="closeVhModal()" class="vh-modal-btn">OK</button>
+    </div>
+</div>
+
+{% if messages %}
+    {% for m in messages %}
+        <div id="vh-message-data" data-text="{{ m }}"></div>
+    {% endfor %}
+{% endif %}
+
+<div class="container vh-matches">
+
+    <section class="vh-matches-hero">
+        <div class="vh-matches-hero-overlay"></div>
+        <div class="vh-matches-hero-content">
+            <h1 class="vh-matches-hero-title">Мои матчи</h1>
+            <p class="vh-matches-hero-subtitle">
+                Здесь отображаются матчи, в которых вы участвуете или которые организуете.
+            </p>
+        </div>
+    </section>
+
+  
+    <div class="vh-matches-grid">
+        {% for game in games %}
+        <div class="vh-match-card"
+             data-date="{{ game.game_date|date:'Y-m-d' }}">
+
+            <div class="vh-match-image">
+                <img src="{{ game.image.url }}" alt="{{ game.title }}">
+            </div>
+
+            <div class="vh-match-tags">
+                <span class="vh-tag vh-tag-format">{{ game.format }}</span>
+                <span class="vh-tag vh-tag-level">{{ game.level }}</span>
+            </div>
+
+            <h3 class="vh-match-title">{{ game.title }}</h3>
+
+            <div class="vh-match-meta">
+                <div>📍 {{ game.location }}</div>
+<div>📌 {{ game.sportshall.address }}</div>
+
+                <div>📅 {{ game.game_date|date:"j E Y" }} г. {{ game.game_time|time:"H:i" }}</div>
+                <div>💰 {{ game.price }} ₽</div>
+            </div>
+
+            <div class="vh-match-meta">
+                <strong>Участники:</strong>
+                <div class="vh-participants">
+                    {% for p in game.gameparticipants_set.all %}
+                        <span class="vh-participant">{{ p.user.username }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ЛОГИКА КНОПОК -->
+{% if game.created_by == request.user %}
+
+    {% if game.created_by.is_organizer %}
+        <!-- Организатор: только удалить -->
+        <button onclick="openDeleteModal('{{ game.id }}')"
+                class="vh-match-btn"
+                style="background:#d9534f;">
+            Удалить матч
+        </button>
+    {% else %}
+        <!-- Организатор лишён роли -->
+        <span class="vh-match-info" style="color:#999;">Роль организатора снята</span>
+    {% endif %}
+
+{% else %}
+    <!-- Участник: может покинуть матч -->
+    <a href="{% url 'leave_match' game.id %}" 
+       class="vh-match-btn" 
+       style="background:#d9534f;">
+        Покинуть матч
+    </a>
+{% endif %}
+
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Модалка подтверждения удаления -->
+<div id="deleteModal" class="vh-modal hidden">
+    <div class="vh-modal-box">
+        <p class="text-lg font-semibold mb-4">Вы точно хотите удалить матч?</p>
+
+        <div class="flex justify-between gap-4">
+            <button id="confirmDeleteBtn"
+                    class="vh-modal-btn"
+                    style="background:#d9534f;">
+                Да, удалить
+            </button>
+
+            <button onclick="closeDeleteModal()" class="vh-modal-btn">
+                Отмена
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* --- Сообщения Django --- */
+function closeVhModal() {
+    document.getElementById("vh-modal").classList.add("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const data = document.getElementById("vh-message-data");
+    if (!data) return;
+
+    const modal = document.getElementById("vh-modal");
+    const modalText = document.getElementById("vh-modal-text");
+
+    modalText.textContent = data.dataset.text;
+    modal.classList.remove("hidden");
+});
+
+/* --- Подтверждение удаления матча --- */
+let deleteUrl = "";
+
+function openDeleteModal(gameId) {
+    deleteUrl = `/delete-match/${gameId}/`;
+    document.getElementById("deleteModal").classList.remove("hidden");
+}
+
+function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.add("hidden");
+}
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+    window.location.href = deleteUrl;
+});
+
+/* ⭐ ФИЛЬТР ПО ДАТЕ */
+/* ⭐ ФИЛЬТР ПО ДАТЕ (с логами) */
+document.addEventListener("DOMContentLoaded", () => {
+    const dateFilter = document.getElementById("date-filter");
+    if (!dateFilter) {
+        console.log('date-filter not found');
+        return;
+    }
+
+    const cards = document.querySelectorAll(".vh-match-card");
+    console.log('cards found:', cards.length);
+
+    dateFilter.addEventListener("change", () => {
+        const selected = dateFilter.value; // ожидаем '2026-06-19'
+        console.log('selected date:', selected);
+
+        cards.forEach(card => {
+            const cardDate = (card.dataset.date || '').trim();
+            console.log('card date:', cardDate, '=>', card);
+
+            if (!selected || cardDate === selected) {
+                card.style.display = "";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+});
+
+</script>
+
+{% endblock %}

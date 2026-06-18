@@ -1,0 +1,242 @@
+{% extends 'main/base.html' %}
+{% block content %}
+
+<div class="vh-container-1470">
+<h2 class="equip-title">Экипировка</h2>
+
+    <div class="vh-matches-top" style="width: 100%; max-width: 1430px; margin: 0 auto;">
+    <input type="text" id="equipSearch" class="vh-search" placeholder="Поиск экипировки...">
+</div>
+
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+        <div class="equip-card bg-white shadow-md rounded-xl p-4 flex flex-col"
+     data-title="{{ product.name }}">
+
+
+            <img src="/media/{{ product.image }}" class="h-48 w-full object-contain rounded-lg mb-3 bg-white">
+
+            <h3 class="text-lg font-semibold mb-1">{{ product.name }}</h3>
+            <p class="text-gray-600 text-sm mb-2">{{ product.description|truncatechars:60 }}</p>
+
+            <p class="text-sm text-gray-500 mb-1">
+                Размеры:
+                {% for s in product.size_list %}
+                    <span class="inline-block bg-gray-100 px-2 py-1 rounded text-xs mr-1">{{ s }}</span>
+                {% endfor %}
+            </p>
+
+            <p class="text-sm text-gray-500 mb-3">Бренд: {{ product.brand }}</p>
+
+            <div class="mt-auto">
+                <p class="text-xl font-bold text-[#6C9AB3] mb-3">{{ product.price|floatformat:0 }} ₽</p>
+
+                {% if not user.is_authenticated %}
+<button onclick="showLoginRequiredModal()"
+        class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition">
+    В корзину
+</button>
+{% else %}
+<button class="open-modal-btn px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition"
+        data-product-id="{{ product.id }}">
+    В корзину
+</button>
+
+
+{% endif %}
+
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+
+
+<!-- ⭐ МОДАЛЬНОЕ ОКНО ВЫБОРА ПАРАМЕТРОВ -->
+<div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-[#FFF8D6] p-6 rounded-xl w-96 shadow-xl border border-[#6C9AB3]">
+
+        <h3 class="text-xl font-bold mb-4 text-[#6C9AB3]">Выберите параметры</h3>
+
+        <form id="modalForm" method="POST">
+            {% csrf_token %}
+
+            <label class="block mb-2 font-semibold text-[#6C9AB3]">Размер:</label>
+            <select name="size" id="sizeSelect" class="w-full border border-[#6C9AB3] rounded p-2 mb-4 bg-white"></select>
+
+            <label class="block mb-2 font-semibold text-[#6C9AB3]">Количество:</label>
+            <input type="number" name="quantity" value="1" min="1"
+                   class="w-full border border-[#6C9AB3] rounded p-2 mb-4 bg-white">
+            <p id="quantityError" class="text-red-500 text-sm mt-[-10px] mb-3 hidden">
+    Максимум 15
+</p>
+
+           {% if user.role == 'guest' %}
+<button type="button" onclick="showGuestModal()" 
+        class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition w-full">
+    В корзину
+</button>
+{% else %}
+<button type="submit"
+        class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition w-full">
+    В корзину
+</button>
+{% endif %}
+
+
+
+        </form>
+
+        <button onclick="closeModal()" class="mt-4 w-full text-gray-500 hover:text-black transition">
+            Отмена
+        </button>
+    </div>
+</div>
+
+
+<!-- ⭐ МОДАЛКА УСПЕХА -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-[#FFF8D6] p-6 rounded-xl w-80 shadow-xl border border-[#6C9AB3] text-center">
+
+        <h3 class="text-xl font-bold mb-3 text-[#6C9AB3]">
+            Товар добавлен в корзину!
+        </h3>
+
+        <button onclick="closeSuccessModal()" 
+                class="w-full bg-[#6C9AB3] text-white py-2 rounded-lg hover:bg-[#547589] transition">
+            Ок
+        </button>
+    </div>
+</div>
+
+
+<!-- ⭐ JS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const modal = document.getElementById("modal");
+    const successModal = document.getElementById("successModal");
+    const form = document.getElementById("modalForm");
+    const sizeSelect = document.getElementById("sizeSelect");
+
+    const qtyInput = form.querySelector("input[name='quantity']");
+    const errorEl = document.getElementById("quantityError");
+
+    // ⭐ Очистка ошибки при изменении количества
+    qtyInput.addEventListener("input", () => {
+        errorEl.classList.add("hidden");
+        qtyInput.classList.remove("border-red-500");
+    });
+
+    // ⭐ Открытие модалки выбора параметров
+    document.querySelectorAll(".open-modal-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+
+            const productId = btn.dataset.productId;
+
+            const response = await fetch(`/product-sizes/${productId}/`);
+            const data = await response.json();
+
+            modal.classList.remove("hidden");
+            form.dataset.productId = productId;
+
+            sizeSelect.innerHTML = "";
+
+            if (data.sizes.length > 0) {
+                data.sizes.forEach(size => {
+                    sizeSelect.innerHTML += `<option value="${size}">${size}</option>`;
+                });
+            } else {
+                sizeSelect.innerHTML = `<option disabled>Нет доступных размеров</option>`;
+            }
+
+            // Сбрасываем ошибку при открытии модалки
+            errorEl.classList.add("hidden");
+            qtyInput.classList.remove("border-red-500");
+            qtyInput.value = 1;
+        });
+    });
+
+    // ⭐ AJAX отправка формы
+    // ⭐ AJAX отправка формы
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const productId = form.dataset.productId;
+    const formData = new FormData(form);
+
+    // перед отправкой очищаем старую ошибку
+    errorEl.classList.add("hidden");
+    qtyInput.classList.remove("border-red-500");
+
+    const response = await fetch(`/add-to-cart/${productId}/`, {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    // 🔥 Ошибка: максимум 15
+    if (data.error === "max_reached") {
+        errorEl.classList.remove("hidden");
+        errorEl.innerText = "Максимум 15";
+        qtyInput.classList.add("border-red-500");
+        return;
+    }
+
+    // ✅ Успешное добавление
+    if (data.success) {
+        const cartCountEl = document.getElementById("cartCount");
+        let current = parseInt(cartCountEl.innerText || "0");
+        let added = parseInt(qtyInput.value);
+
+        cartCountEl.innerText = current + added;
+        cartCountEl.classList.remove("hidden");
+
+        // очищаем ошибку и закрываем модалку
+        errorEl.classList.add("hidden");
+        qtyInput.classList.remove("border-red-500");
+        qtyInput.value = 1;
+
+        modal.classList.add("hidden");
+        successModal.classList.remove("hidden");
+    }
+});
+
+
+    // ⭐ Закрытие модалок
+    function closeSuccessModal() {
+        successModal.classList.add("hidden");
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+        errorEl.classList.add("hidden");
+        qtyInput.classList.remove("border-red-500");
+        qtyInput.value = 1;
+    }
+
+    window.closeModal = closeModal;
+    window.closeSuccessModal = closeSuccessModal;
+
+    // ⭐ Поиск по экипировке
+    document.getElementById("equipSearch").addEventListener("input", function () {
+        const q = this.value.toLowerCase().trim();
+        const cards = document.querySelectorAll(".equip-card");
+
+        cards.forEach(card => {
+            const title = card.dataset.title.toLowerCase();
+            card.style.display = title.includes(q) ? "flex" : "none";
+        });
+    });
+});
+</script>
+
+
+
+{% endblock %}

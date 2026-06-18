@@ -1,0 +1,639 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  .rent-title {
+    text-align: left !important;
+    margin: 0 0 20px 5px;
+    font-weight: 900 !important;
+    letter-spacing: 0.5px;
+}
+.rent-container {
+    width: 1430px;
+    max-width: 100%;
+    margin: 0 auto; /* центрируем */
+}
+
+.size-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.size-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 2px solid #6C9AB3;
+    background: white;
+    color: #6C9AB3;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.size-btn:hover {
+    background: #6C9AB3;
+    color: white;
+}
+
+.size-btn.selected {
+    background: #6C9AB3;
+    color: white;
+    border-color: #547589;
+}
+
+.size-btn.disabled {
+    border-color: #ccc;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+#bookBtn:disabled {
+    background-color: #d3d3d3;
+    color: #777;
+    cursor: not-allowed;
+}
+
+/* Кастомное окно */
+.custom-alert {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.custom-alert-content {
+  background: #FFF3C4;
+  border-radius: 12px;
+  padding: 25px 30px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 18px;
+  color: #333;
+  max-width: 320px;
+}
+
+.custom-alert-content button {
+  margin-top: 15px;
+  background: #6C9AB3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.custom-alert-content button:hover {
+  background: #547589;
+}/* Красивый стиль для select */
+.modal-content select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 2px solid #4aa3ff;
+    border-radius: 10px;
+    background: #f8fbff;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: 0.2s;
+}
+
+/* При фокусе */
+.modal-content select:focus {
+    border-color: #1e8bff;
+    box-shadow: 0 0 6px rgba(30, 139, 255, 0.4);
+}
+
+/* Выпадающий список */
+.modal-content select option {
+    padding: 10px;
+}
+
+/* Ограничиваем высоту выпадающего списка */
+.modal-content select {
+    max-height: 45px; /* высота самого select */
+    overflow-y: auto; /* скролл внутри */
+}
+
+/* Стилизация самого выпадающего окна */
+select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+    background: #e6f2ff;
+    border-radius: 10px;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: #4aa3ff;
+    border-radius: 10px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: #1e8bff;
+}
+.vh-search {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #6C9AB3;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s;
+    margin-bottom: 20px;
+}
+
+.vh-search:focus {
+    border-color: #547589;
+    box-shadow: 0 0 6px rgba(108,154,179,0.4);
+}
+.size-btn-disabled {
+    background-color: #e5e7eb !important; /* bg-gray-200 */
+    color: #6b7280 !important;            /* text-gray-500 */
+    border-color: #d1d5db !important;     /* border-gray-300 */
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
+
+.size-btn-disabled:hover {
+    background-color: #e5e7eb !important;
+    color: #6b7280 !important;
+    border-color: #d1d5db !important;
+    .size-btn-disabled {
+    background-color: #e5e7eb !important; /* светло-серый */
+    color: #6b7280 !important;            /* серый текст */
+    border-color: #d1d5db !important;     /* серый бордер */
+    cursor: not-allowed !important;
+}
+
+.size-btn-disabled:hover {
+    background-color: #e5e7eb !important;
+    color: #6b7280 !important;
+    border-color: #d1d5db !important;
+}
+
+}
+
+</style>
+<div class="rent-container">
+    <h2 class="rent-title">Аренда инвентаря</h2>
+
+    <div class="vh-matches-top">
+        <input type="text" id="rentSearch" class="vh-search" placeholder="Поиск инвентаря...">
+    </div>
+
+    {% if rentals %}
+    <div class="rent-grid">
+
+        {% for r in rentals %}
+        <div class="rent-card" data-title="{{ r.name }}">
+            <input type="hidden" data-price-for="{{ r.id }}" value="{{ r.price }}">
+            {% if r.image %}
+                <img src="/media/{{ r.image }}" class="rent-img">
+            {% else %}
+                <img src="{% static 'main/no-image.png' %}" class="rent-img">
+            {% endif %}
+
+            <div class="rent-info">
+                <h3 class="rent-name">{{ r.name }}</h3>
+                <p class="rent-price">{{ r.price|floatformat:0 }} ₽ / день</p>
+
+                {% if r.description %}
+                    <p class="rent-desc">{{ r.description }}</p>
+                {% endif %}
+
+                {# --- БЛОК РАЗМЕРОВ --- #}
+                {% if r.sizes.count %}
+                    <label>Выберите размер:</label>
+
+                    <div class="size-buttons" id="sizeSelect{{ r.id }}">
+                        {% for s in r.sizes.all %}
+                            {% if s.quantity > 0 %}
+                                <button type="button"
+                                        class="size-btn"
+                                        data-size-id="{{ s.id }}"
+                                        onclick="selectSize('{{ r.id }}', this)">
+                                    {{ s.size }}
+                                </button>
+                            {% else %}
+                                <button type="button"
+                                        class="size-btn size-btn-disabled"
+                                        disabled>
+                                    {{ s.size }}
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% if not r.has_available_sizes %}
+                        <div class="border border-gray-300 rounded-lg px-3 py-2 mt-2 text-center">
+                            <p class="text-gray-500 font-semibold text-base">
+                                Нет в наличии
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {# --- БЛОК КНОПКИ --- #}
+            {% if not user.is_authenticated %}
+                <button onclick="showLoginRequiredModal()"
+                        class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition">
+                    Забронировать
+                </button>
+            {% else %}
+
+                {% if r.sizes.count %}
+                    {% if r.has_available_sizes %}
+                        <button class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition"
+                                onclick="tryOpenModal('{{ r.id }}')">
+                            Забронировать
+                        </button>
+                    {% endif %}
+                {% else %}
+                    {% if r.quantity > 0 %}
+                        <button class="px-4 py-2 bg-[#6C9AB3] text-white rounded-lg hover:bg-[#547589] transition"
+                                onclick="openBookingModal('{{ r.id }}')">
+                            Забронировать
+                        </button>
+                    {% else %}
+                        <div class="border border-gray-300 rounded-lg px-3 py-2 mt-2 text-center">
+                            <p class="text-gray-500 font-semibold text-base">
+                                Нет в наличии
+                            </p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    </div>
+    {% else %}
+        <p class="vh-empty">Нет доступных аренд</p>
+    {% endif %}
+</div>
+
+
+<!-- Модалка -->
+<div id="bookingModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span id="closeModal" style="cursor:pointer;">&times;</span>
+    <h2>Бронирование</h2>
+
+    <form id="bookingForm" method="POST">
+      {% csrf_token %}
+<input type="hidden" name="size_id" id="selectedSizeId">
+<input type="hidden" name="rental_id" id="selectedRentalId">
+
+      <label>Дата начала:</label>
+      <input type="date" name="start_date" required>
+
+      <label>Время начала:</label>
+<select name="start_time" required>
+  <option value="">--:--</option>
+  <option value="09:00">09:00</option>
+  <option value="09:30">09:30</option>
+  <option value="10:00">10:00</option>
+  <option value="10:30">10:30</option>
+  <option value="11:00">11:00</option>
+  <option value="11:30">11:30</option>
+  <option value="12:00">12:00</option>
+  <option value="12:30">12:30</option>
+  <option value="13:00">13:00</option>
+  <option value="13:30">13:30</option>
+  <option value="14:00">14:00</option>
+  <option value="14:30">14:30</option>
+  <option value="15:00">15:00</option>
+  <option value="15:30">15:30</option>
+  <option value="16:00">16:00</option>
+  <option value="16:30">16:30</option>
+  <option value="17:00">17:00</option>
+  <option value="17:30">17:30</option>
+  <option value="18:00">18:00</option>
+  <option value="18:30">18:30</option>
+  <option value="19:00">19:00</option>
+  <option value="19:30">19:30</option>
+  <option value="20:00">20:00</option>
+  <option value="20:30">20:30</option>
+  <option value="21:00">21:00</option>
+  <option value="21:30">21:30</option>
+  <option value="22:00">22:00</option>
+</select>
+
+
+
+      <label>Дата окончания:</label>
+      <input type="date" name="end_date" required>
+
+      <label>Время окончания:</label>
+<select name="end_time" required>
+  <option value="">--:--</option>
+  <option value="09:00">09:00</option>
+  <option value="09:30">09:30</option>
+  <option value="10:00">10:00</option>
+  <option value="10:30">10:30</option>
+  <option value="11:00">11:00</option>
+  <option value="11:30">11:30</option>
+  <option value="12:00">12:00</option>
+  <option value="12:30">12:30</option>
+  <option value="13:00">13:00</option>
+  <option value="13:30">13:30</option>
+  <option value="14:00">14:00</option>
+  <option value="14:30">14:30</option>
+  <option value="15:00">15:00</option>
+  <option value="15:30">15:30</option>
+  <option value="16:00">16:00</option>
+  <option value="16:30">16:30</option>
+  <option value="17:00">17:00</option>
+  <option value="17:30">17:30</option>
+  <option value="18:00">18:00</option>
+  <option value="18:30">18:30</option>
+  <option value="19:00">19:00</option>
+  <option value="19:30">19:30</option>
+  <option value="20:00">20:00</option>
+  <option value="20:30">20:30</option>
+  <option value="21:00">21:00</option>
+  <option value="21:30">21:30</option>
+  <option value="22:00">22:00</option>
+</select>
+
+      <button type="button" id="checkBtn">Проверить доступность</button>
+      <p id="availabilityResult"></p>
+
+      <button type="submit" id="bookBtn" disabled>Забронировать</button>
+    </form>
+  </div>
+</div>
+
+<!-- Кастомное окно -->
+<div id="customAlert" class="custom-alert" style="display:none;">
+  <div class="custom-alert-content">
+    <p id="customAlertText"></p>
+    <button id="customAlertBtn">ОК</button>
+  </div>
+</div>
+
+
+<!-- Кастомное окно -->
+<div id="customAlert" class="custom-alert" style="display:none;">
+  <div class="custom-alert-content">
+    <p id="customAlertText"></p>
+    <button id="customAlertBtn">ОК</button>
+  </div>
+</div>
+
+<script>
+// -------------------------
+// Выбор размера
+// -------------------------
+function selectSize(itemId, btn) {
+    const all = document.querySelectorAll(`#sizeSelect${itemId} .size-btn`);
+
+    if (btn.classList.contains("selected")) {
+        btn.classList.remove("selected");
+        document.getElementById("selectedSizeId").value = "";
+        return;
+    }
+
+    all.forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+
+    document.getElementById("selectedSizeId").value = btn.dataset.sizeId;
+}
+
+
+// -------------------------
+// Попытка открыть модалку
+// -------------------------
+function tryOpenModal(itemId) {
+    const selected = document.querySelector(`#sizeSelect${itemId} .size-btn.selected`);
+
+    if (!selected) {
+        showCustomAlert("Сначала выберите размер");
+        return;
+    }
+
+    document.getElementById("selectedSizeId").value = selected.dataset.sizeId;
+    openBookingModal(itemId);
+}
+
+
+// -------------------------
+// Модалка
+// -------------------------
+const modal = document.getElementById("bookingModal");
+const closeModal = document.getElementById("closeModal");
+
+
+// -------------------------
+// Ограничения календаря
+// -------------------------
+const today = new Date();
+const todayStr = today.toISOString().split("T")[0];
+
+const maxDate = new Date();
+maxDate.setMonth(maxDate.getMonth() + 6);
+const maxDateStr = maxDate.toISOString().split("T")[0];
+
+document.querySelector("input[name='start_date']").setAttribute("min", todayStr);
+document.querySelector("input[name='end_date']").setAttribute("min", todayStr);
+
+document.querySelector("input[name='start_date']").setAttribute("max", maxDateStr);
+document.querySelector("input[name='end_date']").setAttribute("max", maxDateStr);
+
+
+// -------------------------
+// Открытие модалки
+// -------------------------
+function openBookingModal(itemId) {
+    modal.style.display = "block";
+
+    const form = document.getElementById("bookingForm");
+
+    // action — в book_item
+    form.action = `/rent/book/${itemId}/`;
+
+    // dataset для проверки доступности
+    form.dataset.itemId = itemId;
+
+    // скрытое поле для сервера
+    document.getElementById("selectedRentalId").value = itemId;
+
+    // блокируем кнопку бронирования до проверки
+    document.getElementById("bookBtn").disabled = true;
+
+    // очищаем текст результата
+    document.getElementById("availabilityResult").innerText = "";
+}
+
+
+// -------------------------
+// Закрытие модалки
+// -------------------------
+closeModal.onclick = () => {
+    modal.style.display = "none";
+
+    const form = document.getElementById("bookingForm");
+
+    form.reset();
+
+    document.getElementById("selectedSizeId").value = "";
+    document.getElementById("selectedRentalId").value = "";
+
+    document.getElementById("availabilityResult").innerText = "";
+
+    document.getElementById("bookBtn").disabled = true;
+
+    const selectedBtn = document.querySelector(".size-btn.selected");
+    if (selectedBtn) selectedBtn.classList.remove("selected");
+};
+
+
+// -------------------------
+// Проверка доступности
+// -------------------------
+document.getElementById("checkBtn").onclick = function() {
+    const form = document.getElementById("bookingForm");
+    const formData = new FormData(form);
+    const itemId = form.dataset.itemId;
+
+    const startDate = form.start_date.value;
+    const startTime = form.start_time.value;
+    const endDate = form.end_date.value;
+    const endTime = form.end_time.value;
+
+    const result = document.getElementById("availabilityResult");
+
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
+
+    if (!startDate || !startTime || !endDate || !endTime) {
+        result.innerText = "⚠ Заполните все поля.";
+        result.style.color = "red";
+        return;
+    }
+
+    const now = new Date();
+    if (start < now) {
+        result.innerText = "⚠ Нельзя выбрать прошедшую дату.";
+        result.style.color = "red";
+        return;
+    }
+
+    const OPEN_TIME = "09:00";
+    const CLOSE_TIME = "22:00";
+
+    if (startTime < OPEN_TIME) {
+        result.innerText = "⚠ Аренда открывается в 09:00.";
+        result.style.color = "red";
+        return;
+    }
+
+    if (endTime > CLOSE_TIME) {
+        result.innerText = "⚠ Аренда работает до 22:00.";
+        result.style.color = "red";
+        return;
+    }
+
+    function isValidStep(timeStr) {
+        const [h, m] = timeStr.split(":").map(Number);
+        return m % 30 === 0;
+    }
+
+    if (!isValidStep(startTime) || !isValidStep(endTime)) {
+        result.innerText = "⚠ Время можно выбирать только каждые 30 минут.";
+        result.style.color = "red";
+        return;
+    }
+
+    if (end <= start) {
+        result.innerText = "⚠ Время окончания должно быть позже начала.";
+        result.style.color = "red";
+        return;
+    }
+
+    const diffHours = (end - start) / 3600000;
+    if (diffHours < 2) {
+        result.innerText = "⚠ Минимальная аренда — 2 часа.";
+        result.style.color = "red";
+        return;
+    }
+
+    const diffDays = (end - start) / 86400000;
+    if (diffDays > 14) {
+        result.innerText = "⚠ Максимальная аренда — 14 дней.";
+        result.style.color = "red";
+        return;
+    }
+
+    fetch(`/rentals/${itemId}/check/`, {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        result.innerText = data.message;
+        result.style.color = data.available ? "green" : "red";
+
+        document.getElementById("bookBtn").disabled = !data.available;
+
+        if (data.available) {
+            const price = parseFloat(document.querySelector(`[data-price-for="${itemId}"]`).value);
+            const total = Math.ceil(diffDays) * price;
+            result.innerText += `\nСтоимость: ${total} ₽`;
+        }
+    });
+};
+
+
+// -------------------------
+// Кастомное окно
+// -------------------------
+function showCustomAlert(message) {
+    const alertBox = document.getElementById("customAlert");
+    const alertText = document.getElementById("customAlertText");
+    const alertBtn = document.getElementById("customAlertBtn");
+
+    alertText.innerText = message;
+    alertBox.style.display = "flex";
+
+    alertBtn.onclick = () => {
+        alertBox.style.display = "none";
+    };
+}
+
+
+// -------------------------
+// Поиск по аренде
+// -------------------------
+document.getElementById("rentSearch").addEventListener("input", function () {
+    const q = this.value.toLowerCase().trim();
+    const cards = document.querySelectorAll(".rent-card");
+
+    cards.forEach(card => {
+        const title = card.dataset.title.toLowerCase();
+        card.style.display = title.includes(q) ? "flex" : "none";
+    });
+});
+</script>
+
+
+
+
+{% endblock %}

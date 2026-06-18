@@ -1,0 +1,147 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'main/styles.css' %}">
+
+<div class="vh-edit-container">
+
+    <div class="vh-edit-block">
+        <h2 class="profile-title">Редактирование профиля</h2>
+
+        <form id="editForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- АВАТАР + КНОПКА -->
+            <div class="vh-edit-avatar-wrapper">
+
+                {% if profile.avatar %}
+                    <img id="avatarPreview" src="{{ profile.avatar.url }}" class="vh-edit-avatar">
+                {% else %}
+                    <img id="avatarPreview" src="/media/avatars/default.png" class="vh-edit-avatar">
+                {% endif %}
+
+                <div class="vh-edit-avatar-btn-wrapper">
+                    <button type="button" id="openFilePicker" class="vh-file-btn">
+                        Изменить аватар
+                    </button>
+                </div>
+
+                <input type="file" name="avatar" id="avatarInput" accept="image/*" style="display:none;">
+            </div>
+
+
+            <!-- ЛОГИН -->
+            <label for="username" class="form-label">Логин</label>
+            <input type="text"
+                   id="username"
+                   name="username"
+                   class="form-input"
+                   value="{{ user.username }}"
+                   required>
+            <div class="error-message" id="usernameError"></div>
+
+
+            <!-- ИМЯ -->
+            <label for="name" class="form-label">Имя</label>
+            <input type="text"
+                   id="name"
+                   name="name"
+                   class="form-input"
+                   value="{{ user.first_name }}"
+                   required>
+            <div class="error-message" id="nameError"></div>
+
+
+            <!-- ТЕЛЕФОН -->
+            <label for="phone" class="form-label">Телефон</label>
+            <input type="text"
+                   id="phone"
+                   name="phone"
+                   class="form-input"
+                   value="{{ profile.phone }}"
+                   pattern="^\+?[0-9]{10,15}$"
+                   minlength="10"
+                   maxlength="15"
+                   required
+                   placeholder="Например: +79211234567">
+            <div class="error-message" id="phoneError"></div>
+
+
+            <!-- EMAIL -->
+            <label for="email" class="form-label">Email</label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-input"
+                   value="{{ user.email }}"
+                   required>
+            <div class="error-message" id="emailError"></div>
+
+
+            <button type="submit" class="vh-btn-save">Сохранить изменения</button>
+        </form>
+    </div>
+
+</div>
+
+<style>
+.error-message {
+    color: #ff4d4d;
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
+
+.input-error {
+    border: 2px solid #ff4d4d !important;
+}
+</style>
+
+<script>
+    // Открываем окно выбора файла по кнопке
+    document.getElementById('openFilePicker').onclick = function() {
+        document.getElementById('avatarInput').click();
+    };
+
+    // Предпросмотр выбранного файла
+    document.getElementById('avatarInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            document.getElementById('avatarPreview').src = URL.createObjectURL(file);
+        }
+    });
+
+    // Валидация формы
+    document.getElementById('editForm').addEventListener('submit', function(event) {
+        let valid = true;
+
+        const username = document.getElementById('username');
+        const name = document.getElementById('name');
+
+        // ЛОГИН
+        const usernamePattern = /^[A-Za-z0-9]{6,}$/;
+        if (!usernamePattern.test(username.value)) {
+            document.getElementById('usernameError').textContent =
+                'Логин должен содержать минимум 6 английских букв или цифр.';
+            username.classList.add('input-error');
+            valid = false;
+        } else {
+            document.getElementById('usernameError').textContent = '';
+            username.classList.remove('input-error');
+        }
+
+        // ИМЯ
+        const namePattern = /^[А-Яа-яЁё]{2,}$/;
+        if (!namePattern.test(name.value)) {
+            document.getElementById('nameError').textContent =
+                'Имя должно быть на русском и не короче 2 букв.';
+            name.classList.add('input-error');
+            valid = false;
+        } else {
+            document.getElementById('nameError').textContent = '';
+            name.classList.remove('input-error');
+        }
+
+        if (!valid) {
+            event.preventDefault();
+        }
+    });
+</script>

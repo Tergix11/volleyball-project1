@@ -1,0 +1,124 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'main/styles.css' %}">
+
+<div class="vh-checkout-wrapper">
+
+    <!-- ПРОГРЕСС -->
+    <div class="vh-progress">
+        <div class="vh-progress-step active">Корзина</div>
+        <div class="vh-progress-line active"></div>
+        <div class="vh-progress-step active">Оформление</div>
+        <div class="vh-progress-line"></div>
+        <div class="vh-progress-step">Готово</div>
+    </div>
+
+   <h1 class="text-3xl font-bold text-[#6C9AB3] mb-6">
+    Оформление заказа
+</h1>
+
+
+
+    <div class="vh-checkout-grid">
+
+        <!-- ЛЕВАЯ ЧАСТЬ -->
+        <div class="vh-checkout-left">
+
+            <!-- ТОВАРЫ -->
+            <div class="vh-card">
+                <h3 class="vh-card-title">Ваши товары</h3>
+
+                {% for item in cart_items %}
+                <div class="vh-item">
+                   <img src="/media/{{ item.product.image }}" alt="{{ item.product.name }}" class="checkout-img">
+
+
+
+                    <div class="vh-item-info">
+                        <div class="vh-item-name">{{ item.product.name }}</div>
+                        <div class="vh-item-meta">
+                            Размер: {{ item.selected_size }} • Кол-во: {{ item.quantity }}
+                        </div>
+                    </div>
+
+                    <div class="vh-item-price">{{ item.product.price|floatformat:0 }} ₽</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- ПОЛУЧЕНИЕ -->
+            <div class="vh-card">
+                <h3 class="vh-card-title">Получение</h3>
+
+                <label class="vh-label">Пункт выдачи</label>
+<select name="pvz" form="orderForm" class="vh-select" required>
+    <option value="Центральный склад">Центральный склад</option>
+    <option value="ТЦ Южный">ТЦ Южный</option>
+    <option value="ТЦ Северный">ТЦ Северный</option>
+    <option value="ТЦ Восточный">ТЦ Восточный</option>
+    <option value="ТЦ Западный">ТЦ Западный</option>
+</select>
+
+
+                <label class="vh-label">Время получения</label>
+                <select name="pickup_time" form="orderForm" class="vh-select" required>
+                    <option value="Сегодня">Сегодня</option>
+                    <option value="Завтра">Завтра</option>
+                    <option value="В течение недели">В течение недели</option>
+                </select>
+            </div>
+
+            <!-- КОНТАКТЫ -->
+            <div class="vh-card">
+                <h3 class="vh-card-title">Ваши данные</h3>
+
+                <label class="vh-label">Имя</label>
+                <input type="text" class="vh-input" form="orderForm" name="name" value="{{ request.user.username }}" required>
+
+                <label class="vh-label">Телефон</label>
+                <input type="text" class="vh-input" form="orderForm" name="phone" value="{{ request.user.profiles.phone }}" required>
+
+                <label class="vh-label">Комментарий к заказу</label>
+                <textarea class="vh-textarea" form="orderForm" name="comment" placeholder="Например: хочу получить до тренировки"></textarea>
+            </div>
+
+        </div>
+
+        <!-- ПРАВАЯ ЧАСТЬ -->
+        <div class="vh-checkout-right">
+            <div class="vh-summary-card">
+                <h3 class="vh-card-title">Итоги</h3>
+
+                {% load humanize %}
+
+<div class="vh-summary-row">
+    <span>Товары</span>
+    <span>{{ total|floatformat:0|intcomma }} ₽</span>
+</div>
+
+<div class="vh-summary-row">
+    <span>Доставка</span>
+    <span>0 ₽</span>
+</div>
+
+<div class="vh-summary-total">
+    <span>Итого</span>
+    <span>{{ total|floatformat:0|intcomma }} ₽</span>
+</div>
+
+                <form id="orderForm" action="{% url 'confirm_order' %}" method="POST">
+                    {% csrf_token %}
+                </form>
+
+                <button type="submit" form="orderForm" class="vh-confirm-btn">
+                    Подтвердить заказ
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

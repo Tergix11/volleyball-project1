@@ -1,0 +1,129 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="vh-create-container">
+
+    <h2 class="vh-create-title">Редактировать матч</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="vh-create-form">
+        {% csrf_token %}
+
+        <!-- Название -->
+        <label>Название матча</label>
+        <input type="text" name="title"
+               value="{{ form_data.title }}"
+               minlength="5"
+               placeholder="Например: Вечерняя игра 6×6"
+               required>
+
+        <!-- Дата -->
+        <label>Дата</label>
+        <input type="date" name="game_date" id="game_date"
+               value="{{ form_data.game_date }}"
+               required>
+
+        <!-- Время -->
+        <label>Время</label>
+        <select name="game_time" id="game_time" required>
+            <option value="">--:--</option>
+            {% for t in times %}
+                <option value="{{ t }}" {% if form_data.game_time == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+
+        {% if error_time %}
+            <p class="error-under-image">{{ error_time }}</p>
+        {% endif %}
+
+        <!-- Локация -->
+        <label>Локация</label>
+        <select name="location" class="vh-input" required>
+            <option value="">Выберите спортзал</option>
+            {% for hall in halls %}
+                <option value="{{ hall.id }}"
+                    {% if form_data.location == hall.id|stringformat:"s" %}selected{% endif %}>
+                    {{ hall.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        {% if error_location %}
+            <p class="error-under-image">{{ error_location }}</p>
+        {% endif %}
+
+        <!-- Уровень -->
+        <label>Уровень</label>
+        <select name="level" required>
+            <option value="Новичок" {% if form_data.level == "Новичок" %}selected{% endif %}>Новичок</option>
+            <option value="Средний" {% if form_data.level == "Средний" %}selected{% endif %}>Средний</option>
+            <option value="Продвинутый" {% if form_data.level == "Продвинутый" %}selected{% endif %}>Продвинутый</option>
+        </select>
+
+        <!-- Цена -->
+        <label>Цена</label>
+        <input type="number" name="price" min="0"
+               value="{{ form_data.price }}"
+               placeholder="Введите цену"
+               required>
+
+        {% if error_price %}
+            <p class="error-under-image">{{ error_price }}</p>
+        {% endif %}
+
+        <!-- Фото -->
+        <label>Фото матча</label>
+        <input type="file" name="image">
+
+        {% if match.image %}
+            <p>Текущее фото:</p>
+            <img src="{{ match.image.url }}" class="vh-edit-image-preview">
+        {% endif %}
+
+        <button type="submit" class="vh-create-btn">Сохранить изменения</button>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dateInput = document.getElementById("game_date");
+    const timeSelect = document.getElementById("game_time");
+
+    // Ограничение даты: сегодня → +180 дней
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 180);
+
+    dateInput.min = today.toISOString().split("T")[0];
+    dateInput.max = maxDate.toISOString().split("T")[0];
+
+    // Блокировка прошедшего времени
+    function updateTimeOptions() {
+        const selectedDate = new Date(dateInput.value);
+        const now = new Date();
+
+        for (const option of timeSelect.options) {
+            if (!option.value) continue;
+
+            const [h, m] = option.value.split(":").map(Number);
+            const optionMinutes = h * 60 + m;
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            option.disabled =
+                selectedDate.toDateString() === now.toDateString() &&
+                optionMinutes <= currentMinutes;
+        }
+
+        if (timeSelect.selectedOptions[0]?.disabled) {
+            timeSelect.value = "";
+        }
+    }
+
+    dateInput.addEventListener("change", updateTimeOptions);
+    if (dateInput.value) updateTimeOptions();
+});
+</script>
+{% endblock %}

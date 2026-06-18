@@ -1,0 +1,220 @@
+{% extends 'main/base.html' %}
+{% block content %}
+
+<form style="display:none;">{% csrf_token %}</form>
+
+<div class="vh-container-1470">
+
+    <h2 class="text-3xl font-bold mb-6 text-[#6C9AB3]">Корзина</h2>
+
+    {% if items %}
+    <div class="space-y-4">
+
+        {% for item in items %}
+        <div class="cart-item flex items-center bg-white shadow rounded-xl p-4">
+
+            <img src="/media/{{ item.product.image }}" class="h-20 w-20 object-contain rounded-lg mr-4 bg-white">
+
+            <div class="flex-1">
+                <h3 class="font-semibold">{{ item.product.name }}</h3>
+                <p class="text-gray-500 text-sm">Размер: {{ item.selected_size }}</p>
+                <p class="text-gray-600">{{ item.product.price|floatformat:0 }} ₽</p>
+            </div>
+
+            <!-- КОЛИЧЕСТВО -->
+            <div class="flex flex-col items-center mr-4">
+
+                <button class="qty-arrow up text-xl font-bold text-[#6C9AB3] hover:text-[#547589]"
+                        data-item-id="{{ item.id }}">
+                    ▲
+                </button>
+
+                <input type="number"
+       class="qty-value text-lg font-semibold w-16 text-center border rounded"
+       data-item-id="{{ item.id }}"
+       value="{{ item.quantity }}"
+       min="1"
+       max="15">
+<p class="max-msg" style="color:red; font-size:14px; display:none;">
+    Максимум 15
+</p>
+
+
+                <button class="qty-arrow down text-xl font-bold text-[#6C9AB3] hover:text-[#547589]"
+                        data-item-id="{{ item.id }}">
+                    ▼
+                </button>
+
+            </div>
+
+            <!-- КРЕСТИК -->
+            <button class="remove-btn text-red-500 text-3xl font-bold hover:text-red-700 transition"
+                    data-item-id="{{ item.id }}">
+                ×
+            </button>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- КНОПКА ОФОРМИТЬ ЗАКАЗ -->
+    <div class="flex justify-center mt-8">
+        <a href="{% url 'checkout' %}" class="vh-order-btn">
+            Оформить заказ
+        </a>
+    </div>
+
+    {% else %}
+    <p class="text-gray-500">Корзина пуста</p>
+    {% endif %}
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // ============================
+    // УДАЛЕНИЕ ТОВАРА
+    // ============================
+   document.querySelectorAll(".remove-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+
+        const itemId = btn.dataset.itemId;
+
+        const response = await fetch(`/remove-from-cart/${itemId}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken }
+        });
+
+        if (!response.ok) return;
+
+        const cartItem = btn.closest(".cart-item");
+        const qtyEl = cartItem.querySelector(".qty-value");
+
+        let removedQty = 1;
+        if (qtyEl) {
+            const parsed = parseInt(qtyEl.value ?? qtyEl.innerText);
+            if (!isNaN(parsed) && parsed > 0) {
+                removedQty = parsed;
+            }
+        }
+
+        cartItem.remove();
+        updateCartCount();
+    });
+});
+
+
+    // ============================
+    // ИЗМЕНЕНИЕ ЧЕРЕЗ INPUT
+    // ============================
+    document.querySelectorAll(".qty-value").forEach(input => {
+
+        input.addEventListener("input", async () => {
+            let value = parseInt(input.value);
+
+            if (isNaN(value) || value < 1) value = 1;
+            if (value > 15) {
+                value = 15;
+                showMaxMessage(input.closest(".cart-item"));
+            }
+
+            input.value = value;
+
+            const itemId = input.dataset.itemId;
+
+            await fetch(`/update-cart/${itemId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ quantity: value })
+            });
+
+            updateCartCount();
+        });
+    });
+
+
+    // ============================
+    // ИЗМЕНЕНИЕ ЧЕРЕЗ СТРЕЛКИ ▲ ▼
+    // ============================
+    document.querySelectorAll(".qty-arrow").forEach(btn => {
+        btn.addEventListener("click", async () => {
+
+            const item = btn.closest(".cart-item");
+            const input = item.querySelector(".qty-value");
+            let value = parseInt(input.value);
+
+            if (btn.classList.contains("up")) {
+                if (value >= 15) {
+                    input.value = 15;
+                    showMaxMessage(item);
+                    return;
+                }
+                value++;
+            }
+
+            if (btn.classList.contains("down")) {
+                value--;
+                if (value < 1) value = 1;
+            }
+
+            input.value = value;
+
+            const itemId = input.dataset.itemId;
+
+            await fetch(`/update-cart/${itemId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ quantity: value })
+            });
+
+            updateCartCount();
+        });
+    });
+
+
+    // ============================
+    // ПОКАЗ "Максимум 15"
+    // ============================
+    function showMaxMessage(item) {
+        let msg = item.querySelector(".max-msg");
+        msg.style.display = "block";
+    }
+
+
+    // ============================
+    // ОБНОВЛЕНИЕ СЧЁТЧИКА КОРЗИНЫ
+    // ============================
+    function updateCartCount() {
+        const cartCountEl = document.getElementById("cartCount");
+        if (!cartCountEl) return;
+
+        let total = 0;
+        document.querySelectorAll(".qty-value").forEach(input => {
+            total += parseInt(input.value);
+        });
+
+        cartCountEl.innerText = total;
+
+        if (total <= 0) {
+            cartCountEl.classList.add("hidden");
+        } else {
+            cartCountEl.classList.remove("hidden");
+        }
+    }
+
+});
+
+</script>
+
+{% endblock %}

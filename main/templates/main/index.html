@@ -1,0 +1,144 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="container">
+
+    <!-- HERO -->
+    <section class="vh-hero fade-in">
+        <div class="vh-hero-left">
+            <p class="vh-kicker">Платформа для волейболистов</p>
+
+            <h1 class="vh-title">
+                Волейбол<br>
+                начинается здесь.
+            </h1>
+
+            <p class="vh-subtitle">
+                Матчи, аренда инвентаря и экипировка — в одном месте.
+                Собирайте команды, бронируйте площадки и играйте в своём ритме.
+            </p>
+
+            <div class="vh-hero-actions">
+                <a href="{% url 'games' %}" class="vh-btn vh-btn-primary">Найти матч</a>
+                <a href="{% url 'rent' %}" class="vh-btn vh-btn-ghost">Арендовать инвентарь</a>
+                <a href="{% url 'shop' %}" class="vh-link">Каталог экипировки →</a>
+            </div>
+
+            <div class="vh-hero-meta">
+                <span>1200+ игроков</span>
+                <span>300+ проведённых матчей</span>
+                <span>50+ площадок</span>
+            </div>
+        </div>
+
+        <div class="vh-hero-right">
+            <div class="vh-hero-orbit">
+                <div class="vh-orbit-tag vh-orbit-tag-top">Матчи 3×3 и 6×6</div>
+                <div class="vh-orbit-tag vh-orbit-tag-bottom">Любительские лиги</div>
+
+                <div class="vh-ball-shell">
+                    <img src="{% static 'main/img/мяч.png' %}" alt="Volleyball">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ЧТО МОЖНО ДЕЛАТЬ -->
+   <section class="vh-features">
+    <h2 class="vh-section-title-big">Что вы можете делать на Volleyball Hub</h2>
+
+    <div class="vh-feature-cards">
+        
+        <div class="vh-feature-card">
+            <div class="vh-feature-img">
+                <img src="{% static 'main/img/фото1.png' %}" alt="">
+            </div>
+            <h3 class="vh-feature-title">Играть в матчи</h3>
+            <p class="vh-feature-text">
+                Создавайте игры, присоединяйтесь к открытым матчам, собирайте команду под свой уровень.
+            </p>
+            <a href="{% url 'games' %}" class="vh-feature-link">Перейти к матчам →</a>
+        </div>
+
+        <div class="vh-feature-card">
+            <div class="vh-feature-img">
+                <img src="{% static 'main/img/фото2.png' %}" alt="">
+            </div>
+            <h3 class="vh-feature-title">Бронировать инвентарь</h3>
+            <p class="vh-feature-text">
+                Мячи, сетки, стойки и другое — всё, что нужно для комфортной игры.
+            </p>
+            <a href="{% url 'rent' %}" class="vh-feature-link">Перейти к аренде →</a>
+        </div>
+
+        <div class="vh-feature-card">
+            <div class="vh-feature-img">
+                <img src="{% static 'main/img/фото3.png' %}" alt="">
+            </div>
+            <h3 class="vh-feature-title">Подбирать экипировку</h3>
+            <p class="vh-feature-text">
+                Обувь, наколенники, форма и аксессуары — для зала и пляжа.
+            </p>
+            <a href="{% url 'shop' %}" class="vh-feature-link">Открыть каталог →</a>
+        </div>
+
+    </div>
+</section>
+
+
+<section class="vh-timeline-wrapper">
+    <div class="vh-timeline-section">
+
+ 
+
+
+        <div class="vh-container-1430">
+
+            <h2 class="vh-timeline-title">Как это работает</h2>
+
+           
+
+        <div class="vh-timeline">
+
+            <div class="vh-timeline-step">
+                <div class="vh-timeline-dot"></div>
+                <h3>Создайте профиль</h3>
+                <p>Укажите уровень игры, любимый формат и район.</p>
+            </div>
+
+            <div class="vh-timeline-step">
+                <div class="vh-timeline-dot"></div>
+                <h3>Найдите матч</h3>
+                <p>Выберите игру по дате, уровню и площадке.</p>
+            </div>
+
+            <div class="vh-timeline-step">
+                <div class="vh-timeline-dot"></div>
+                <h3>Арендуйте инвентарь или купите экипировку</h3>
+                <p>Добавьте аренду мяча и сетки — или приобретите кроссовки, форму и аксессуары.</p>
+            </div>
+
+            <div class="vh-timeline-step">
+                <div class="vh-timeline-dot"></div>
+                <h3>Выходите на площадку</h3>
+                <p>Приходите вовремя, играйте и знакомьтесь с новыми людьми.</p>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+
+
+    
+    
+</section>
+
+
+</div>
+{% endblock %}

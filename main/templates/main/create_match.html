@@ -1,0 +1,193 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="vh-create-container">
+
+    <h2 class="vh-create-title">Создать матч</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="vh-create-form">
+        {% csrf_token %}
+
+        <!-- НАЗВАНИЕ -->
+        <label>Название матча</label>
+        <input type="text" name="title"
+               value="{{ form_data.title }}"
+               minlength="5"
+               placeholder="Например: Вечерняя игра 6×6"
+               required>
+
+        <!-- ДАТА -->
+        <label>Дата</label>
+        <input type="date" name="game_date" id="game_date"
+               value="{{ form_data.game_date }}"
+               required>
+
+        <!-- ВРЕМЯ -->
+        <label>Время</label>
+<select name="game_time" id="game_time" required>
+    <option value="">--:--</option>
+
+    <option value="08:00" {% if form_data.game_time == "08:00" %}selected{% endif %}>08:00</option>
+    <option value="08:30" {% if form_data.game_time == "08:30" %}selected{% endif %}>08:30</option>
+    <option value="09:00" {% if form_data.game_time == "09:00" %}selected{% endif %}>09:00</option>
+    <option value="09:30" {% if form_data.game_time == "09:30" %}selected{% endif %}>09:30</option>
+    <option value="10:00" {% if form_data.game_time == "10:00" %}selected{% endif %}>10:00</option>
+    <option value="10:30" {% if form_data.game_time == "10:30" %}selected{% endif %}>10:30</option>
+    <option value="11:00" {% if form_data.game_time == "11:00" %}selected{% endif %}>11:00</option>
+    <option value="11:30" {% if form_data.game_time == "11:30" %}selected{% endif %}>11:30</option>
+    <option value="12:00" {% if form_data.game_time == "12:00" %}selected{% endif %}>12:00</option>
+    <option value="12:30" {% if form_data.game_time == "12:30" %}selected{% endif %}>12:30</option>
+    <option value="13:00" {% if form_data.game_time == "13:00" %}selected{% endif %}>13:00</option>
+    <option value="13:30" {% if form_data.game_time == "13:30" %}selected{% endif %}>13:30</option>
+    <option value="14:00" {% if form_data.game_time == "14:00" %}selected{% endif %}>14:00</option>
+    <option value="14:30" {% if form_data.game_time == "14:30" %}selected{% endif %}>14:30</option>
+    <option value="15:00" {% if form_data.game_time == "15:00" %}selected{% endif %}>15:00</option>
+    <option value="15:30" {% if form_data.game_time == "15:30" %}selected{% endif %}>15:30</option>
+    <option value="16:00" {% if form_data.game_time == "16:00" %}selected{% endif %}>16:00</option>
+    <option value="16:30" {% if form_data.game_time == "16:30" %}selected{% endif %}>16:30</option>
+    <option value="17:00" {% if form_data.game_time == "17:00" %}selected{% endif %}>17:00</option>
+    <option value="17:30" {% if form_data.game_time == "17:30" %}selected{% endif %}>17:30</option>
+    <option value="18:00" {% if form_data.game_time == "18:00" %}selected{% endif %}>18:00</option>
+    <option value="18:30" {% if form_data.game_time == "18:30" %}selected{% endif %}>18:30</option>
+    <option value="19:00" {% if form_data.game_time == "19:00" %}selected{% endif %}>19:00</option>
+</select>
+
+        {% if error_time %}
+            <p class="error-under-image">{{ error_time }}</p>
+        {% endif %}
+
+        <!-- ЛОКАЦИЯ -->
+        <label>Локация</label>
+        <select name="location" class="vh-input" required>
+    <option value="">Выберите спортзал</option>
+    {% for hall in halls %}
+        <option value="{{ hall.id }}"
+            {% if form_data.location == hall.id|stringformat:"s" %}selected{% endif %}>
+            {{ hall.name }}
+        </option>
+    {% endfor %}
+</select>
+
+
+        {% if error_location %}
+            <p class="error-under-image">{{ error_location }}</p>
+        {% endif %}
+
+        <!-- ФОРМАТ -->
+        <label>Формат</label>
+        <select name="format" id="format" required>
+            <option value="3x3" {% if form_data.format == "3x3" %}selected{% endif %}>3x3</option>
+            <option value="6x6" {% if form_data.format == "6x6" %}selected{% endif %}>6x6</option>
+            <option value="2x2" {% if form_data.format == "2x2" %}selected{% endif %}>2x2</option>
+        </select>
+
+        <!-- УРОВЕНЬ -->
+        <label>Уровень</label>
+        <select name="level" required>
+            <option value="Новичок" {% if form_data.level == "Новичок" %}selected{% endif %}>Новичок</option>
+            <option value="Средний" {% if form_data.level == "Средний" %}selected{% endif %}>Средний</option>
+            <option value="Продвинутый" {% if form_data.level == "Продвинутый" %}selected{% endif %}>Продвинутый</option>
+        </select>
+
+        <!-- МАКСИМУМ ИГРОКОВ -->
+        <label>Максимум игроков</label>
+        <input type="number" id="maxPlayers" name="max_players" class="input"
+               value="{{ form_data.max_players }}">
+
+        {% if error_max %}
+            <p class="error-under-image">{{ error_max }}</p>
+        {% endif %}
+<label>Цена</label>
+<input type="number" name="price" class="input"
+       value="{{ form_data.price }}"
+       min="0" required>
+
+{% if error_price %}
+    <p class="error-under-image">{{ error_price }}</p>
+{% endif %}
+
+        <!-- ФОТО -->
+        <label>Фото матча</label>
+        <input type="file" name="image">
+
+        {% if error_image %}
+            <p class="error-under-image">{{ error_image }}</p>
+        {% endif %}
+
+        <button type="submit" class="vh-create-btn">Создать матч</button>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------------- ДАТА ---------------- */
+    const dateInput = document.getElementById("game_date");
+    const timeSelect = document.getElementById("game_time");
+
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 180);
+
+    dateInput.min = today.toISOString().split("T")[0];
+    dateInput.max = maxDate.toISOString().split("T")[0];
+
+    function updateTimeOptions() {
+        const selectedDate = new Date(dateInput.value);
+        const now = new Date();
+
+        for (const option of timeSelect.options) {
+            if (!option.value) continue;
+
+            const [h, m] = option.value.split(":").map(Number);
+            const optionMinutes = h * 60 + m;
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            option.disabled =
+                selectedDate.toDateString() === now.toDateString() &&
+                optionMinutes <= currentMinutes;
+        }
+
+        if (timeSelect.selectedOptions[0]?.disabled) {
+            timeSelect.value = "";
+        }
+    }
+
+    dateInput.addEventListener("change", updateTimeOptions);
+    if (dateInput.value) updateTimeOptions();
+
+    /* ---------------- МАКС ИГРОКОВ ---------------- */
+    const formatField = document.getElementById("format");
+    const maxPlayersField = document.getElementById("maxPlayers");
+    const errorText = document.getElementById("maxPlayersError");
+
+    const limits = {
+        "2x2": 4,
+        "3x3": 6,
+        "6x6": 12
+    };
+
+    formatField.addEventListener("change", () => {
+        const format = formatField.value;
+        maxPlayersField.value = limits[format];
+        errorText.style.display = "none";
+    });
+
+    maxPlayersField.addEventListener("input", () => {
+        const format = formatField.value;
+        const correct = limits[format];
+
+        if (Number(maxPlayersField.value) !== correct) {
+            errorText.style.display = "block";
+        } else {
+            errorText.style.display = "none";
+        }
+    });
+
+});
+</script>
+{% endblock %}

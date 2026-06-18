@@ -1,0 +1,51 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'main/styles.css' %}">
+
+<div class="vh-container-1470 mt-10">
+
+    <h1 class="text-3xl font-bold text-[#6C9AB3] mb-6">
+        Мои покупки
+    </h1>
+
+    {% if orders %}
+        <div class="vh-orders-list">
+
+            {% for order in orders %}
+            <div class="vh-order-card">
+
+                <div class="vh-order-header">
+                    <span class="vh-order-id">Заказ №{{ order.id }}</span>
+                    <span class="vh-order-status status-{{ order.status }}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="vh-order-info">
+                    <div>Пункт выдачи: <b>{{ order.pvz }}</b></div>
+                    <div>Дата: {{ order.created_at|date:"d.m.Y H:i" }}</div>
+                    <div>Сумма: <b>{{ order.total_price }} ₽</b></div>
+                </div>
+                <p class="payment-info">Оплата при получении</p>
+
+                
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="vh-empty-orders">
+            <p class="vh-empty-text">Вы ещё ничего не покупали</p>
+            <a href="{% url 'shop' %}" class="vh-empty-btn">Перейти в магазин</a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

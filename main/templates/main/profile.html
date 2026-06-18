@@ -1,0 +1,201 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'main/styles.css' %}">
+
+<div class="vh-profile-container">
+
+    <!-- АВАТАР + ИМЯ -->
+    <div class="vh-profile-header">
+
+        <div class="vh-profile-avatar-wrapper">
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="avatar" class="vh-profile-avatar">
+            {% else %}
+                <img src="/media/avatars/default.png" alt="avatar" class="vh-profile-avatar">
+            {% endif %}
+        </div>
+
+        <h1 class="vh-profile-username">{{ user.username }}</h1>
+    </div>
+
+
+    
+    {% if user.is_admin %}
+<div class="vh-admin-panel">
+    <h2 class="vh-admin-title">Админ‑панель</h2>
+
+    <div class="vh-admin-buttons">
+    <a href="{% url 'admin_requests_organizer' %}" class="vh-admin-btn">Заявки на организатора</a>
+    <a href="{% url 'admin_requests_rent' %}" class="vh-admin-btn">Заявки на аренду</a>
+
+    <a href="{% url 'admin_inventory' %}" class="vh-admin-btn">Аренда инвентаря</a>
+    <a href="{% url 'admin_products' %}" class="vh-admin-btn">Экипировка</a>
+
+    <a href="{% url 'admin_organizers' %}" class="vh-admin-btn">Организаторы</a>
+    <a href="{% url 'admin_orders' %}" class="vh-admin-btn">Заказы</a>
+
+    <!-- ⭐ ДОБАВЛЯЕМ ЭТУ КНОПКУ -->
+    <a href="{% url 'admin_matches' %}" class="vh-admin-btn">Матчи</a>
+</div>
+
+</div>
+{% endif %}
+
+<!-- БЛОК АККАУНТА -->
+<div class="vh-profile-block">
+    <h2>Мой аккаунт</h2>
+
+    <p><strong>Логин:</strong> {{ user.username }}</p>
+    <p><strong>Имя:</strong> {{ user.first_name }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Телефон:</strong> {{ profile.phone|default:"Не указан" }}</p>
+
+    <a href="{% url 'edit_profile' %}" class="vh-btn-outline">Редактировать профиль</a>
+</div>
+
+
+    <!-- КОРЗИНА -->
+    <div class="vh-profile-block">
+        <h2>Моя корзина</h2>
+
+        {% if cart_items_count > 0 %}
+            <p>Товаров в корзине: <strong>{{ cart_items_count }}</strong></p>
+        {% else %}
+            <p class="vh-empty">Ваша корзина пуста</p>
+        {% endif %}
+
+        <a href="{% url 'cart' %}" class="vh-btn-outline">Перейти в корзину</a>
+    </div>
+
+
+    <!-- МАТЧИ -->
+    <div class="vh-profile-block">
+        <h2>Мои матчи</h2>
+
+        {% if matches_count == 0 %}
+            <p class="vh-profile-empty">Вы ещё не участвуете ни в одном матче.</p>
+            <a href="{% url 'games' %}" class="vh-profile-btn">Перейти к матчам</a>
+        {% else %}
+            <a href="{% url 'my_matches' %}" class="vh-profile-btn">Перейти к моим матчам</a>
+        {% endif %}
+    </div>
+
+
+    <!-- АРЕНДА -->
+    <div class="vh-profile-block vh-rent-block">
+        <h2 class="vh-profile-title">Аренды</h2>
+
+        {% if rentals_count > 0 %}
+            <p class="vh-profile-text">Активных аренд: <strong>{{ rentals_count }}</strong></p>
+            <a href="{% url 'my_rentals' %}" class="vh-profile-btn">Мои аренды</a>
+        {% else %}
+            <p class="vh-profile-empty">Вы пока не арендуете оборудование</p>
+            <a href="{% url 'rent' %}" class="vh-profile-btn">Перейти к аренде</a>
+        {% endif %}
+    </div>
+
+
+    <!-- ПОКУПКИ -->
+    <div class="vh-profile-block">
+        <h2>Мои покупки</h2>
+
+        {% if orders_count > 0 %}
+            <p>Покупок: <strong>{{ orders_count }}</strong></p>
+            <a href="{% url 'my_orders' %}" class="vh-btn-primary">История покупок</a>
+
+        {% else %}
+            <p class="vh-empty">Вы ещё ничего не покупали</p>
+        {% endif %}
+    </div>
+
+
+    <!-- УВЕДОМЛЕНИЯ -->
+   <div class="vh-profile-block">
+    <h2>Мои уведомления</h2>
+
+    {% if unread_count > 0 or notifications %}
+        <a href="{% url 'notifications_page' %}" class="vh-btn-outline">
+            Просмотр уведомлений
+        </a>
+    {% else %}
+        <p class="vh-empty">У вас пока нет уведомлений</p>
+    {% endif %}
+</div>
+
+
+
+    <!-- ОРГАНИЗАТОР -->
+    {% if user.is_organizer %}
+        <div class="vh-organizer-label">Вы — организатор</div>
+
+    {% elif request_status == "pending" %}
+        <button class="vh-btn-outline bg-yellow-200 text-yellow-800 cursor-not-allowed">
+            Заявка на рассмотрении
+        </button>
+
+    {% elif request_status == "rejected" %}
+        <button class="vh-btn-outline" data-bs-toggle="modal" data-bs-target="#organizerModal">
+            Отправить заявку повторно
+        </button>
+
+    {% else %}
+        <button class="vh-btn-outline" data-bs-toggle="modal" data-bs-target="#organizerModal">
+            Стать организатором
+        </button>
+    {% endif %}
+
+
+    <!-- ВЫХОД -->
+    <a href="{% url 'logout' %}" class="vh-btn-logout">Выйти из профиля</a>
+
+</div>
+
+
+<!-- ========================= -->
+<!--   МОДАЛЬНОЕ ОКНО ЗАЯВКИ   -->
+<!-- ========================= -->
+
+<div class="modal fade" id="organizerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-xl rounded-3xl border-0" style="overflow:hidden;">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-[#6C9AB3] text-white">
+        <h5 class="modal-title fw-bold">Заявка на организатора</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- FORM -->
+      <form method="POST" action="{% url 'become_organizer' %}">
+        {% csrf_token %}
+
+        <div class="modal-body p-4">
+
+          <label class="form-label fw-semibold">Ваше имя</label>
+          <input type="text" name="name" class="form-control shadow-sm mb-3 rounded-2" required>
+
+          <label class="form-label fw-semibold">Телефон</label>
+          <input type="text" name="phone" class="form-control shadow-sm mb-3 rounded-2" required>
+
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" name="email" class="form-control shadow-sm mb-3 rounded-2" required>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer bg-light">
+          <button type="submit" class="btn text-white px-4 py-2 rounded-2"
+                  style="background:#6C9AB3;">
+            Отправить заявку
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

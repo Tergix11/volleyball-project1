@@ -1,0 +1,150 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<style>
+/* Карточка */
+.rentals-card {
+    background: #ffffff;
+    border: 2px solid #6C9AB3;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Картинка */
+.rentals-card-img img {
+    width: 100%;
+    border-radius: 12px;
+}
+
+/* Заголовок */
+.rentals-card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+/* Стоимость — жирная */
+.rent-total {
+    font-weight: 700;
+    font-size: 16px;
+    margin-top: 6px;
+}
+
+/* Статусы — такие же как в админке */
+.status {
+    padding: 10px 16px;      /* было 6px 12px — увеличили */
+    border-radius: 10px;     /* чуть больше скругление */
+    font-weight: 600;
+    font-size: 15px;         /* было 14px — увеличили */
+    white-space: nowrap;
+    display: inline-block;
+}
+
+
+/* Забронирована — жёлтый */
+.status-booked {
+    background: #FFFBE6;
+    border: 2px solid #F1C40F;
+    color: #8a6d1d;
+}
+
+/* В аренде — зелёный */
+.status-active {
+    background: #E9F9EE;
+    border: 2px solid #2ECC71;
+    color: #1e7e34;
+}
+
+/* Ожидает возврата — жёлтый */
+.status-awaiting {
+    background: #FFF7D6;
+    border: 2px solid #F1C40F;
+    color: #8a6d1d;
+}
+
+/* Завершена — серый */
+.status-completed {
+    background: #F4F4F4;
+    border: 2px solid #95A5A6;
+    color: #555;
+}
+
+/* Отменена — красный */
+.status-cancelled {
+    background: #FDECEA;
+    border: 2px solid #E74C3C;
+    color: #a1261a;
+}
+</style>
+
+<div class="rentals-container">
+    <h2 class="rentals-title">Мои аренды</h2>
+
+    {% if rentals %}
+        <div class="rentals-grid">
+            {% for r in rentals %}
+            <div class="rentals-card">
+
+                <!-- Картинка -->
+                <div class="rentals-card-img">
+                    <img src="{{ r.item.image.url }}" alt="{{ r.item.name }}">
+                </div>
+
+                <!-- Контент -->
+                <div class="rentals-card-body">
+                    <h3 class="rentals-card-title">{{ r.item.name }}</h3>
+
+                    <p><strong>Начало:</strong> {{ r.start_datetime }}</p>
+                    <p><strong>Окончание:</strong> {{ r.end_datetime }}</p>
+                   <p class="rent-total">
+    Стоимость: {{ r.total_price|floatformat:0|intcomma }} ₽
+</p>
+<p class="payment-info">Оплата при получении</p>
+
+
+                    <p><strong>Статус:</strong>
+
+             <td>
+    {% if r.status == 'booked' %}
+    <span class="status status-booked">Забронирована</span>
+
+{% elif r.status == 'active' %}
+    <span class="status status-active">В аренде</span>
+
+{% elif r.status == 'awaiting_return' %}
+    <span class="status status-awaiting">Ожидает возврата</span>
+
+{% elif r.status == 'completed' %}
+    <span class="status status-completed">Завершена</span>
+
+{% elif r.status == 'cancelled' %}
+    <span class="status status-cancelled">Отменена</span>
+{% endif %}
+
+
+</td>
+
+
+
+                    </p>
+
+                    
+         
+
+
+                   
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p class="empty">У вас пока нет аренд</p>
+    {% endif %}
+</div>
+
+{% endblock %}

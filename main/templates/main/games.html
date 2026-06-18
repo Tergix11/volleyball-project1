@@ -1,0 +1,226 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- ✅ Единое модальное окно -->
+<div id="vh-modal" class="vh-modal hidden">
+    <div class="vh-modal-box">
+        <p id="vh-modal-text"></p>
+        <button onclick="closeVhModal()" class="vh-modal-btn">OK</button>
+    </div>
+</div>
+
+<!-- ✅ Сообщения Django -->
+{% if messages %}
+    {% for m in messages %}
+        {% if "матч" in m.message|lower %}
+            <div id="vh-message-data" data-text="{{ m }}"></div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<div class="container vh-matches">
+
+    <div class="matches-header">
+        <h2 class="matches-title">Матчи</h2>
+
+        {% if user.is_organizer %}
+            <a href="{% url 'create_match' %}" class="create-match-btn">
+                + Создать матч
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- 🔍 Поиск и кнопка фильтров -->
+    <div class="vh-matches-top">
+        <form method="GET" class="vh-search-form">
+            <input type="text" name="q" class="vh-search" placeholder="Поиск матчей..." value="{{ request.GET.q }}">
+        </form>
+
+        <button class="vh-filter-btn" onclick="openFilters()">Фильтры</button>
+    </div>
+
+    <!-- 🧩 Сетка матчей -->
+    <div class="vh-matches-grid">
+        {% for game in games %}
+            <div class="vh-match-card"
+                data-level="{{ game.level }}"
+                data-format="{{ game.format }}"
+                data-date="{{ game.game_date|date:'Y-m-d' }}"
+                data-type="{% if 'пляж' in game.location|lower %}Пляж{% else %}Зал{% endif %}">
+
+                <div class="vh-match-image">
+                    <img src="{{ game.image.url }}" alt="{{ game.title }}" class="vh-match-img">
+                </div>
+
+                <div class="vh-match-tags">
+                    <span class="vh-tag vh-tag-format">{{ game.format }}</span>
+                    <span class="vh-tag vh-tag-level">{{ game.level }}</span>
+                </div>
+
+                <h3 class="vh-match-title">{{ game.title }}</h3>
+
+                <div class="vh-match-meta">
+                    <div>📍 {{ game.location }}</div>
+<div>📌 {{ game.sportshall.address }}</div>
+                    <div>📅 {{ game.game_date|date:"j E Y" }} г. {{ game.game_time|time:"H:i" }}</div>
+                    <div>💰 {{ game.price }} ₽</div>
+                </div>
+
+                {% if game.players_count >= game.max_players %}
+                    <button class="vh-match-btn vh-disabled" disabled>Мест нет</button>
+                {% else %}
+                    {% if not user.is_authenticated %}
+                        <button onclick="showLoginRequiredModal()" class="vh-match-btn">Присоединиться</button>
+                    {% else %}
+                        {% if not game.created_by.is_organizer %}
+                            <button class="vh-match-btn vh-disabled" disabled style="background:#999;">
+                                Организатор удалён
+                            </button>
+                        {% else %}
+                            {% if request.user != game.created_by %}
+                                <a href="{% url 'join_match' game.id %}" class="vh-match-btn">
+                                    Присоединиться
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>Матчи не найдены</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- ⚙️ Модальное окно фильтров -->
+<div id="filtersModal" class="vh-modal">
+    <div class="vh-modal-content">
+
+        <h2 class="vh-modal-title">Фильтры</h2>
+
+        <div class="vh-modal-group">
+            <label>Уровень:</label>
+            <select id="filterLevel">
+                <option value="">Любой</option>
+                <option value="Новички">Новички</option>
+                <option value="Любители">Любители</option>
+                <option value="Профессионалы">Профессионалы</option>
+            </select>
+        </div>
+
+        <div class="vh-modal-group">
+            <label>Формат:</label>
+            <select id="filterFormat">
+                <option value="">Любой</option>
+                <option value="3x3">3x3</option>
+                <option value="6x6">6x6</option>
+                <option value="2x2">2x2</option>
+            </select>
+        </div>
+
+        <div class="vh-modal-group">
+            <label>Тип площадки:</label>
+            <select id="filterType">
+                <option value="">Любой</option>
+                <option value="Зал">Зал</option>
+                <option value="Пляж">Пляж</option>
+            </select>
+        </div>
+
+        <div class="vh-modal-group">
+            <label>Дата:</label>
+            <input type="date" id="date-filter">
+        </div>
+
+        <div class="vh-modal-actions">
+            <button onclick="applyFilters()" class="vh-apply-btn">Применить</button>
+            <button onclick="closeFilters()" class="vh-cancel-btn">Отмена</button>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+/* ============================
+   МОДАЛЬНОЕ ОКНО СООБЩЕНИЙ
+   ============================ */
+
+function closeVhModal() {
+    document.getElementById("vh-modal").classList.add("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const msg = document.querySelector("#vh-message-data");
+    if (!msg) return;
+
+    const modal = document.getElementById("vh-modal");
+    const modalText = document.getElementById("vh-modal-text");
+
+    modalText.innerHTML = msg.dataset.text;
+    modal.classList.remove("hidden");
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeVhModal();
+    });
+});
+
+
+/* ============================
+   ФИЛЬТРЫ
+   ============================ */
+
+function openFilters() {
+    document.getElementById("filtersModal").style.display = "flex";
+}
+
+function closeFilters() {
+    document.getElementById("filtersModal").style.display = "none";
+}
+
+function applyFilters() {
+    const level = document.getElementById("filterLevel").value;
+    const format = document.getElementById("filterFormat").value;
+    const type = document.getElementById("filterType").value;
+    const date = document.getElementById("date-filter").value;
+
+    const cards = document.querySelectorAll(".vh-match-card");
+
+    cards.forEach(card => {
+        const cardLevel = card.dataset.level;
+        const cardFormat = card.dataset.format;
+        const cardType = card.dataset.type;
+        const cardDate = card.dataset.date;
+
+        let show = true;
+
+        if (level && cardLevel !== level) show = false;
+        if (format && cardFormat !== format) show = false;
+        if (type && cardType !== type) show = false;
+        if (date && cardDate !== date) show = false;
+
+        card.style.display = show ? "flex" : "none";
+    });
+
+    closeFilters();
+}
+
+
+/* ============================
+   ЗАПРЕТ ПРОШЕДШИХ ДАТ
+   ============================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+    const dateInput = document.getElementById("date-filter");
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.min = today;
+});
+
+</script>
+{% endblock %}

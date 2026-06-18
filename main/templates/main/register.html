@@ -1,0 +1,51 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="auth-container">
+
+    <div class="auth-box">
+        <h2 class="auth-title">Создать аккаунт</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div style="color:red; margin-bottom:10px;">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <div class="auth-field">
+                <label>Имя</label>
+                {{ form.username }}
+            </div>
+
+            <div class="auth-field">
+                <label>Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="auth-field">
+                <label>Пароль</label>
+                {{ form.password1 }}
+            </div>
+
+            <div class="auth-field">
+                <label>Повторите пароль</label>
+                {{ form.password2 }}
+            </div>
+
+            <button class="auth-btn" type="submit">Создать аккаунт</button>
+
+            <p class="auth-switch">
+                Уже есть аккаунт?
+                <a href="{% url 'login' %}">Войти</a>
+            </p>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}
